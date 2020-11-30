@@ -80,24 +80,15 @@ formatted as a single column. Ensure no duplicate data, and order by
 the member name. */
 
 SELECT 
-	b.facid, m.firstname, m.surname
+	DISTINCT f.name, CONCAT( m.firstname, ' ', m.surname ) AS membername
 FROM 
-	Bookings as b
+	Bookings AS b
 INNER JOIN 
-	Members as m
-	ON m.memid = b.memid
-WHERE b.facid in 
-	(SELECT facid 
-     FROM Facilities
-     WHERE name like 'Tennis%')
-     
-     INNER JOIN 
-	Members as m
-	ON m.memid = b.memid
-INNER JOIN
-	Facilities as f
-	ON f.facid = b.facid
-WHERE f.name like 'Tennis%'
+	Facilities AS f ON f.facid = b.facid
+INNER JOIN 
+	Members AS m ON m.memid = b.memid
+WHERE f.name LIKE 'Tennis%'
+ORDER BY membername
 
 /* Q8: Produce a list of bookings on the day of 2012-09-14 which
 will cost the member (or guest) more than $30. Remember that guests have
@@ -106,6 +97,21 @@ the guest user's ID is always 0. Include in your output the name of the
 facility, the name of the member formatted as a single column, and the cost.
 Order by descending cost, and do not use any subqueries. */
 
+
+ Showing rows 0 - 11 (12 total, Query took 0.0031 sec)
+SELECT 
+	f.name, CONCAT( m.firstname, ' ', m.surname ) AS membername,
+	CASE WHEN m.memid =0 THEN b.slots * f.guestcost
+	ELSE b.slots * f.membercost
+	END AS cost
+FROM Bookings AS b
+INNER JOIN Facilities AS f ON f.facid = b.facid
+INNER JOIN Members AS m ON m.memid = b.memid
+WHERE 
+	DATE( b.starttime ) = '2012-09-14' AND 
+	((m.memid = 0 AND (b.slots * f.guestcost) >30) OR 
+	 (m.memid !=0 AND (b.slots * f.membercost) >30))
+ORDER BY cost
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
 
