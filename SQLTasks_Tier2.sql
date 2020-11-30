@@ -101,7 +101,7 @@ Order by descending cost, and do not use any subqueries. */
  Showing rows 0 - 11 (12 total, Query took 0.0031 sec)
 SELECT 
 	f.name, CONCAT( m.firstname, ' ', m.surname ) AS membername,
-	CASE WHEN m.memid =0 THEN b.slots * f.guestcost
+	CASE WHEN b.memid =0 THEN b.slots * f.guestcost
 	ELSE b.slots * f.membercost
 	END AS cost
 FROM Bookings AS b
@@ -109,27 +109,23 @@ INNER JOIN Facilities AS f ON f.facid = b.facid
 INNER JOIN Members AS m ON m.memid = b.memid
 WHERE 
 	DATE( b.starttime ) = '2012-09-14' AND 
-	((m.memid = 0 AND (b.slots * f.guestcost) >30) OR 
-	 (m.memid !=0 AND (b.slots * f.membercost) >30))
+	((b.memid = 0 AND (b.slots * f.guestcost) >30) OR 
+	 (b.memid !=0 AND (b.slots * f.membercost) >30))
 ORDER BY cost
 
 /* Q9: This time, produce the same result as in Q8, but using a subquery. */
 
-
-/* PART 2: SQLite
-
-Export the country club data from PHPMyAdmin, and connect to a local SQLite instance from Jupyter notebook
-for the following questions.
-
-QUESTIONS:
-/* Q10: Produce a list of facilities with a total revenue less than 1000.
-The output of facility name and total revenue, sorted by revenue. Remember
-that there's a different cost for guests and members! */
-
-/* Q11: Produce a report of members and who recommended them in alphabetic surname,firstname order */
-
-
-/* Q12: Find the facilities with their usage by member, but not guests */
-
-
-/* Q13: Find the facilities usage by month, but not guests */
+SELECT 
+	f.name, 
+	(SELECT CONCAT( m.firstname, ' ', m.surname )
+	 FROM Members AS m 
+     	 WHERE m.memid = b.memid) as name, 
+	CASE WHEN b.memid =0 THEN b.slots * f.guestcost
+		ELSE b.slots * f.membercost END AS cost
+FROM Bookings AS b
+INNER JOIN Facilities AS f ON f.facid = b.facid
+WHERE 
+	DATE( b.starttime ) = '2012-09-14' AND 
+	((b.memid = 0 AND (b.slots * f.guestcost) >30) OR 
+	 (b.memid !=0 AND (b.slots * f.membercost) >30))
+ORDER BY cost
